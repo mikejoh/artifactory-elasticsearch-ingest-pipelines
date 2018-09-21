@@ -1,0 +1,70 @@
+{
+    "pipeline" : {
+      "description": "Artifactory request.log pipeline",
+      "processors": [ 
+        {
+          "grok": {
+            "field": "message",
+            "patterns": [ 
+                "^%{DATA:rtf.request.timestamp}\\|%{NUMBER:rtf.request.time}\\|%{DATA:rtf.request.type}\\|%{DATA:rtf.request.client_ip}\\|%{DATA:rtf.request.username}\\|%{DATA:rtf.request.method}\\|%{DATA:rtf.request.path}\\|%{DATA:rtf.request.version}\\|%{DATA:rtf.request.response_code}\\|%{DATA:rtf.request.content_length}$"
+            ],
+            "on_failure" : [
+              {
+                "set" : {
+                  "field" : "_index",
+                  "value" : "failed-request-log-pipeline-{{ _index }}"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "date": {
+            "field" : "rtf.request.timestamp",
+            "target_field": "@timestamp", 
+            "formats" : [ "YYYYMMddHHmmss" ],
+            "timezone" : "Europe/Stockholm",
+            "on_failure" : [
+              {
+                "set" : {
+                  "field" : "_index",
+                  "value" : "failed-request-log-pipeline-{{ _index }}"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "remove": {
+            "field": "message"
+          }
+        }
+      ]
+    },
+    "docs": [
+      {
+        "_index": "index",
+        "_type": "_doc",
+        "_id": "1",
+        "_source": {
+          "message": "20180921092355|892|REQUEST|1.2.3.4|userid1234|PUT|/applications-stash/app-bundle.zip|HTTP/1.0|201|27565068"
+        }
+      },
+      {
+        "_index": "index",
+        "_type": "_doc",
+        "_id": "2",
+        "_source": {
+          "message": "20180921092356|27|REQUEST|192.168.1.23|anonymous|GET|/webapp/|HTTP/1.0|200|0"
+        }
+      },
+      {
+        "_index": "index",
+        "_type": "_doc",
+        "_id": "3",
+        "_source": {
+          "message": "20180921092359|1|REQUEST|192.168.1.24|anonymous|GET|/api/system/licenses|HTTP/1.0|401|0"
+        }
+      }
+    ]
+  }

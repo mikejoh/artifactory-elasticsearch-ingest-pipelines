@@ -1,0 +1,42 @@
+{
+    "description": "Artifactory request.log pipeline",
+    "processors": [ 
+        {
+            "grok": {
+            "field": "message",
+            "patterns": [ 
+                "^%{DATA:rtf.request.timestamp}\\|%{NUMBER:rtf.request.time}\\|%{DATA:rtf.request.type}\\|%{DATA:rtf.request.client_ip}\\|%{DATA:rtf.request.username}\\|%{DATA:rtf.request.method}\\|%{DATA:rtf.request.path}\\|%{DATA:rtf.request.version}\\|%{DATA:rtf.request.response_code}\\|%{DATA:rtf.request.content_length}$"
+            ],
+            "on_failure" : [
+                {
+                "set" : {
+                    "field" : "_index",
+                    "value" : "failed-request-log-pipeline-{{ _index }}"
+                }
+                }
+            ]
+            }
+        },
+        {
+            "date": {
+            "field" : "rtf.request.timestamp",
+            "target_field": "@timestamp", 
+            "formats" : [ "YYYYMMddHHmmss" ],
+            "timezone" : "Europe/Stockholm",
+            "on_failure" : [
+                {
+                "set" : {
+                    "field" : "_index",
+                    "value" : "failed-request-log-pipeline-{{ _index }}"
+                }
+                }
+            ]
+            }
+        },
+        {
+            "remove": {
+            "field": "message"
+            }
+        }
+    ]
+}
